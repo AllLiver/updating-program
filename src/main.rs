@@ -11,19 +11,25 @@ async fn main() -> Result<()> {
     if let Some(current_version_remote) = remote_cargo_toml.iter().find(|x| x.starts_with("version = ")) {
         let current_version_remote = current_version_remote.split("=").collect::<Vec<&str>>()[1].trim().trim_start_matches('"').trim_end_matches('"');
 
-        let current_version_local: Vec<u8> = current_version_local.split(".").map(|x| x.parse::<u8>().expect("Failed to parse remote version")).collect();
-        let current_version_remote: Vec<u8> = current_version_remote.split(".").map(|x| x.parse::<u8>().expect("Failed to parse remote version")).collect();
+        let current_version_local_vec: Vec<u8> = current_version_local.split(".").map(|x| x.parse::<u8>().expect("Failed to parse remote version")).collect();
+        let current_version_remote_vec: Vec<u8> = current_version_remote.split(".").map(|x| x.parse::<u8>().expect("Failed to parse remote version")).collect();
 
-        let mut out_of_date = true;
+        let mut out_of_date = false;
 
-        for i in 0..current_version_local.len() {
-            if current_version_local >= current_version_remote {
-                out_of_date = false;
+        for i in 0..current_version_local_vec.len() {
+            if current_version_remote_vec[i] > current_version_local_vec[i] {
+                out_of_date = true;
+                break;
+            } else if current_version_remote_vec[i] < current_version_local_vec[i] {
                 break;
             }
         }
 
-        println!("are we out of date? {}", out_of_date);
+        if out_of_date {
+            println!("Out of date, updating from {} -> {}", current_version_local, current_version_remote);
+        } else {
+            println!("Up to date!");
+        }
     } else {
         return Err(anyhow!("Failed to retrieve current version on main remote branch"));
     }
